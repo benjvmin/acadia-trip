@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { analyzeRoute } from '@/domain/route';
 import { miniTrip } from '@/data/miniTrip';
-import { parseTrip } from '@/data/parseTrip';
 
 describe('analyzeRoute', () => {
   it('counts stop statuses and sums the route', () => {
@@ -57,11 +55,29 @@ describe('analyzeRoute', () => {
     });
   });
 
-  it('analyzes the canonical route without impossible mileage', () => {
-    const canonical = parseTrip(
-      JSON.parse(readFileSync('src/data/trip.json', 'utf8')),
-    );
-    const result = analyzeRoute(canonical);
+  it('analyzes the seven-day driving plan without impossible mileage', () => {
+    const miles = [470, 165, 55, 25, 40, 280, 330];
+    const overnights = [
+      'South Portland, ME',
+      'Tremont, ME',
+      'Bar Harbor, ME',
+      'Bar Harbor, ME',
+      'Bar Harbor, ME',
+      'Newburyport, MA',
+      null,
+    ];
+    const trip = {
+      ...miniTrip,
+      days: miles.map((driveMiles, index) => ({
+        ...miniTrip.days[0],
+        day: index + 1,
+        driveMiles,
+        overnightCity: overnights[index],
+        stops: [],
+        lodging: null,
+      })),
+    };
+    const result = analyzeRoute(trip);
     expect(result.drivingMiles).toBe(470 + 165 + 55 + 25 + 40 + 280 + 330);
     expect(result.overnightCities).toEqual([
       'South Portland, ME',

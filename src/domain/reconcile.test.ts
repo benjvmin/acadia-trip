@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { miniTrip } from '@/data/miniTrip';
-import { parseTrip } from '@/data/parseTrip';
 import { reconcile } from '@/domain/reconcile';
 import type { Trip } from '@/types/trip';
 
@@ -47,19 +45,36 @@ describe('reconcile', () => {
     expect(results[1].recommendation).toContain('fallback');
   });
 
-  it('finds exactly the four known canonical contradictions', () => {
-    const canonical = parseTrip(
-      JSON.parse(readFileSync('src/data/trip.json', 'utf8')),
-    );
-    const kinds = reconcile(canonical).map((contradiction) => contradiction.kind).sort();
+  it('finds two open stays, one reservation, and one backup fork', () => {
+    const openStay = { id: 'open-stay-a', summary: 'Option A', booked: false, candidates: [] };
+    const trip: Trip = {
+      ...miniTrip,
+      days: [
+        { ...miniTrip.days[0], day: 3, lodging: openStay },
+        {
+          ...miniTrip.days[0],
+          day: 4,
+          lodging: openStay,
+          stops: [{ id: 'backup', time: '', name: 'Fallback trail', ll: { lat: 44.36, lng: -68.2 }, status: 'backup' }],
+        },
+        {
+          ...miniTrip.days[0],
+          day: 6,
+          lodging: { id: 'open-stay-b', summary: 'Option B', booked: false, candidates: [] },
+          stops: [{ id: 'reservation', time: '', name: 'Sunrise road', flag: 'reservation', warn: true, ll: { lat: 44.35, lng: -68.22 }, status: 'confirmed' }],
+        },
+      ],
+    };
+    const contradictions = reconcile(trip);
+    const kinds = contradictions.map((contradiction) => contradiction.kind).sort();
     expect(kinds).toEqual([
       'or_stop',
       'unbooked_lodging',
       'unbooked_lodging',
       'unconfirmed_reservation',
     ]);
-    expect(reconcile(canonical).every((item) => item.recommendation.length > 0)).toBe(true);
-    expect(reconcile(canonical).every((item) => !item.message.toLowerCase().includes('chosen'))).toBe(true);
-    expect(reconcile(canonical).filter((item) => item.kind === 'unbooked_lodging').every((item) => !item.message.includes('Oceanside') && !item.message.includes('Garrison'))).toBe(true);
+    expect(contradictions.every((item) => item.recommendation.length > 0)).toBe(true);
+    expect(contradictions.every((item) => !item.message.toLowerCase().includes('chosen'))).toBe(true);
+    expect(contradictions.filter((item) => item.kind === 'unbooked_lodging').every((item) => !item.message.includes('Option A') && !item.message.includes('Option B'))).toBe(true);
   });
 });

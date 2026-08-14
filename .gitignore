@@ -1,3 +1,7 @@
 source.html
-encrypt.mjs
 .playwright-mcp/
+node_modules
+dist
+*.tsbuildinfo
+src/data/trip.json
+.DS_Store

@@ -3,22 +3,26 @@ import { readFileSync } from 'node:fs';
 
 const css = readFileSync('src/styles/app.css', 'utf8');
 
-describe('quiet field guide theme', () => {
-  it('uses one neutral surface system without decorative page texture', () => {
-    expect(css).toContain('--surface: #faf7ef;');
+describe('warm travel marketplace theme', () => {
+  it('uses an airy surface system with a single coral accent', () => {
+    expect(css).toContain('--surface: #ffffff;');
+    expect(css).toContain('--accent: #c84850;');
+    expect(css).toContain('--radius: 16px;');
+    expect(css).toContain('"Avenir Next"');
     const bodyRule = css.match(/body \{([\s\S]*?)\n\}/)?.[1] ?? '';
     expect(bodyRule).not.toContain('background-image');
   });
 
-  it('keeps dashboard navigation neutral and removes ornamental callout art', () => {
+  it('gives one dashboard destination personality while keeping audit calm', () => {
     expect(css).not.toContain('.journey-callout::after');
-    expect(css).toMatch(/\.route-callout \{[^}]*background: var\(--surface\);[^}]*color: var\(--ink\);/);
+    expect(css).toMatch(/\.route-callout \{[^}]*background: var\(--accent\);[^}]*color: var\(--surface\);/);
     expect(css).toMatch(/\.audit-callout \{[^}]*background: var\(--surface\);[^}]*color: var\(--ink\);/);
   });
 
-  it('reserves dark spruce fills for actions and the unlock screen', () => {
+  it('uses the same accent for selected navigation and primary actions', () => {
     expect(css).toMatch(/\.ledger-summary \{[^}]*background: var\(--surface\);[^}]*color: var\(--ink\);/);
-    expect(css).toMatch(/\.expense-form button \{[^}]*background: var\(--spruce\);/);
-    expect(css).toMatch(/body:has\(\.unlock\) \{[^}]*background: var\(--spruce\);/);
+    expect(css).toMatch(/\.tab\.router-link-active \{[^}]*background: var\(--accent\);/);
+    expect(css).toMatch(/\.expense-form button \{[^}]*background: var\(--accent\);/);
+    expect(css).toMatch(/body:has\(\.unlock\) \{[^}]*background: var\(--ink\);/);
   });
 });
